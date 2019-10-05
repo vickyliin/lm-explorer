@@ -199,11 +199,6 @@ const OutputToken = styled.span`
 
 const OutputSpace = styled.span``
 
-const ModelChoice = styled.span`
-  font-weight: ${props => props.selected ? 'bold' : 'normal'};
-  color: ${props => props.selected ? 'black' : 'lightgray'};
-  cursor: ${props => props.selected ? 'default' : 'pointer'};
-`
 
 const Footer = styled.div`
   margin: 2rem 0 0 0;
@@ -228,7 +223,7 @@ function trimRight(str) {
   return str.replace(/ +$/, '');
 }
 
-const DEFAULT_MODEL = "345M"
+const DEFAULT_MODEL = "gpt2/345M"
 
 class App extends React.Component {
 
@@ -293,8 +288,8 @@ class App extends React.Component {
     }
   }
 
-  switchModel() {
-    const newModel = this.state.model == "117M" ? "345M" : "117M"
+  switchModel(newModel) {
+    if (this.state.model === newModel) return
     this.setState({ loading: true, error: false, model: newModel }, this.choose)
   }
 
@@ -412,15 +407,31 @@ class App extends React.Component {
   }
 }
 
-const ModelSwitcher = ({model, switchModel}) => (
-  <span className="model-switcher" onClick={switchModel}>
-    {' '}
-    <ModelChoice selected={model==="345M"}>345M</ModelChoice>
-    {' '}
-    <ModelChoice selected={model==="117M"}>117M</ModelChoice>
-    {' '}
-  </span>
-)
+const ModelSwitcher = ({model, switchModel}) => {
+  const ModelChoice = styled.span.attrs(({value}) => ({
+    onClick: () => switchModel(value)
+  }))`${({value}) => value === model
+    ? `
+      font-weight: bold;
+      color: black;
+      cursor: default;
+    `
+    : `
+      font-weight: normal;
+      color: lightgray;
+      cursor: pointer;
+    `
+  }`
+  return (
+    <span className="model-switcher">
+      {' '}
+      <ModelChoice value="gpt2/345M">GPT2/345M</ModelChoice>
+      {' '}
+      <ModelChoice value="gpt2/117M">GPT2/117M</ModelChoice>
+      {' '}
+    </span>
+  )
+}
 
 const formatProbability = prob => {
   prob = prob * 100
