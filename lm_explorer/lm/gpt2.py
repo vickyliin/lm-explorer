@@ -13,7 +13,9 @@ from lm_explorer.util.sampling import random_sample
 MEDIUM_MODEL = 'https://storage.googleapis.com/allennlp/models/gpt2-345M-dump'
 
 class GPT2LanguageModel(LanguageModel):
-    def __init__(self, cache_size: int = 0, model_name: str = '117M') -> None:
+    name = 'gpt2'
+
+    def __init__(self, model_name: str = '117M', cache_size: int = 0) -> None:
         """
         Each cache element is about 8MB, so size accordingly.
         """
