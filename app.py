@@ -15,7 +15,7 @@ from flask import Flask, request, Response, jsonify, render_template, send_from_
 from flask_cors import CORS
 from gevent.pywsgi import WSGIServer
 
-from lm_explorer.lm.gpt2 import GPT2LanguageModel
+from lm_explorer import LanguageModel
 from lm_explorer.util.sampling import random_sample
 
 logging.basicConfig(level=logging.INFO)
@@ -43,9 +43,6 @@ class ServerError(Exception):
 
 
 def make_app(google_analytics_ua: str) -> Flask:
-    model_117M = GPT2LanguageModel(model_name='117M')
-    model_345M = GPT2LanguageModel(model_name='345M')
-
     app = Flask(__name__) # pylint: disable=invalid-name
 
     # We hash the javascript file and use it as a cache breaker
@@ -87,19 +84,14 @@ def make_app(google_analytics_ua: str) -> Flask:
         # Log the query
         app.logger.info(f"<{previous_str}> <{next_str}>")
 
-        model_name = data.get("model_name", "117M")
-        if model_name == "117M":
-            logits = model_117M.predict(previous_str, next_str)
-        elif model_name == "345M":
-            logits = model_345M.predict(previous_str, next_str)
+        model_name = data.get("model_name", "gpt2/117M")
+        model = LanguageModel(model_name)
+        logits = model.predict(previous_str, next_str)
 
         probabilities = torch.nn.functional.softmax(logits)
 
         best_logits, best_indices = logits.topk(topk)
-        if model_name == "117M":
-            best_words = [model_117M[idx.item()] for idx in best_indices]
-        elif model_name == "345M":
-            best_words = [model_345M[idx.item()] for idx in best_indices]
+        best_words = [model[idx.item()] for idx in best_indices]
         best_probabilities = probabilities[best_indices].tolist()
 
         # random sample
@@ -210,10 +202,10 @@ def main(args):
     if args.dev:
         app.debug = True
         app.run(port=args.port, host='0.0.0.0')
-        print(f"Model loaded, serving demo on port {args.port}")
+        print(f"Serving demo on port {args.port}")
     else:
         http_server = WSGIServer(('0.0.0.0', args.port), app, log=sys.stdout)
-        print(f"Model loaded, serving demo on port {args.port}")
+        print(f"Serving demo on port {args.port}")
         http_server.serve_forever()
 
 #
